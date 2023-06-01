@@ -1,0 +1,13 @@
+{
+  "description": "Centre for educational neuroscience",
+  "home": {
+    "title": "Centre for educational neuroscience",
+    "description": "Welcome to the Centre for Neuroscience in Education page! We are blablabla... Some brief introductory text that explains who we are, what we do, why we exist, who we serve, and why our services and competencies are needed."
+  },
+  "footer": {
+    "addressTitle": "Address",
+    "address": "Centre for educational neuroscience, ITMO University, Lomonosova 9, St. Petersburg, 191002",
+    "scheduleTitle": "Work schedule",
+    "schedule": "Mon-Fri from 10:00 to 18:00, Room 4204"
+  }
+}
