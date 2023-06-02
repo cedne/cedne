@@ -2,7 +2,9 @@
   "description": "Centre for educational neuroscience",
   "home": {
     "title": "Centre for educational neuroscience",
-    "description": "Welcome to the Centre for Neuroscience in Education page! \nWe are blablabla... \nSome brief introductory text that explains who we are, what we do, why we exist, who we serve, and why our services and competencies are needed."
+    "description": "Welcome to the Centre for Neuroscience in Education page! \nWe are blablabla... \nSome brief introductory text that explains who we are, what we do, why we exist, who we serve, and why our services and competencies are needed.",
+    "teamTitle": "Our team",
+    "projectsTitle": "Our projects"
   },
   "footer": {
     "addressTitle": "Address",
