@@ -1,6 +1,5 @@
 import { getDictionary } from "@/get-dictionary";
 import { Locale, i18n } from "@/i18n-config";
-import { Inter } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -21,8 +20,6 @@ export async function generateMetadata({
   };
 }
 
-const inter = Inter({ subsets: ["latin"] });
-
 export default function Root({
   children,
   params,
@@ -32,7 +29,7 @@ export default function Root({
 }) {
   return (
     <html lang={params.lang}>
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }
