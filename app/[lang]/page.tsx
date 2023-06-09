@@ -3,16 +3,18 @@ import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getProjects, getTeam } from "@/lib/serverActions";
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
+  const projects = await getProjects(params.lang);
+  const team = await getTeam(params.lang);
+
+  projects.length = 0;
 
   return (
     <>
-      <header
-        className="relative mb-14 max-sm:h-72 max-md:h-128 max-lg:h-144 max-xl:h-160 h-64 w-full
-      "
-      >
+      <header className="relative mb-14 max-sm:h-72 max-md:h-128 max-lg:h-144 max-xl:h-160 h-64 w-full">
         <Image
           src="/header.png"
           alt="CEdNe header image"
@@ -37,13 +39,36 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
             className="flex flex-wrap gap-10 justify-items-center
           "
           >
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className="w-full h-60 flex-1 max-sm:flex-none basis-5/12
+            {projects.length === 0 &&
+              Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="w-full h-60 flex-1 max-sm:flex-none basis-5/12
               "
-              />
-            ))}
+                />
+              ))}
+            {projects.length !== 0 &&
+              projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="w-full h-60 flex-1 max-sm:flex-none basis-5/12 flex flex-col"
+                >
+                  <div className="relative flex-1">
+                    <Image
+                      src={`/assets/${project.id}.jpg`}
+                      alt={project.name}
+                      fill
+                      className="object-cover -z-10"
+                    />
+                  </div>
+                  <h3
+                    className="font-bold text-xl bg-neutral-700 text-white p-2
+                  "
+                  >
+                    {project.name}
+                  </h3>
+                </div>
+              ))}
           </div>
         </section>
 
