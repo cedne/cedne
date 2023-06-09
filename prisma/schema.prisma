@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Locale {
+  language String    @id @default("ru")
+  Project  Project[]
+  Member   Member[]
+}
+
+model Project {
+  id             String  @id @default(cuid())
+  locale         Locale  @relation(fields: [localeLanguage], references: [language])
+  name           String
+  description    String?
+  localeLanguage String
+}
+
+model Member {
+  id             String @id @default(cuid())
+  locale         Locale @relation(fields: [localeLanguage], references: [language])
+  name           String
+  position       String
+  localeLanguage String
+}
+
+model APIToken {
+  token String @id @default(uuid())
+}
