@@ -5,5 +5,6 @@ export async function GET(request: NextRequest, params: { asset: string }) {
   return NextResponse.json({
     asset: params.asset,
     pwd: await fs.realpath("."),
+    files: await fs.readdir("."),
   });
 }
