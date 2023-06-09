@@ -85,24 +85,20 @@ export default function LocaleSwitcher({
           <DropdownMenuRadioGroup>
             {i18n.locales.map((locale, index) => {
               return (
-                <>
-                  <DropdownMenuRadioItem
-                    key={locale}
-                    value={locale}
-                    className="min-w-min"
-                  >
-                    <Link
-                      href={redirectedPathName(locale)}
-                      className="block hover:bg-gray-700 transition-colors duration-200
+                <DropdownMenuRadioItem
+                  key={locale}
+                  value={locale}
+                  className="min-w-min"
+                >
+                  <Link
+                    href={redirectedPathName(locale)}
+                    className="block hover:bg-gray-700 transition-colors duration-200
                   "
-                    >
-                      {locale}
-                    </Link>
-                  </DropdownMenuRadioItem>
-                  {index < i18n.locales.length - 1 && (
-                    <DropdownMenuSeparator key={index} />
-                  )}
-                </>
+                  >
+                    {locale}
+                  </Link>
+                  {index < i18n.locales.length - 1 && <DropdownMenuSeparator />}
+                </DropdownMenuRadioItem>
               );
             })}
           </DropdownMenuRadioGroup>
