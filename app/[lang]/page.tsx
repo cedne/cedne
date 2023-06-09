@@ -3,14 +3,11 @@ import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProjects, getTeam } from "@/lib/serverActions";
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
-  const projects = await getProjects(params.lang);
-  const team = await getTeam(params.lang);
 
-  projects.length = 0;
+  const projects = [] as { id: string; name: string }[];
 
   return (
     <>
