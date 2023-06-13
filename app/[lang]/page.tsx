@@ -105,24 +105,20 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
           <h2 className="font-bold text-2xl mb-4">{dict.home.teamTitle}</h2>
           <div className="grid max-sm:grid-cols-1 max-md:grid-cols-2 grid-cols-3 gap-x-4 gap-y-10 justify-items-center">
             {Array.from({ length: 6 }).map((_, index) => {
-              return members.map(async (member) => {
-                const importImage = async () => {
-                  const { default: Image } = await import(
-                    `@/public/assets/${member.id}.webp`
-                  );
-
-                  return Image;
-                };
+              return members.map((member) => {
                 return (
                   <div
                     key={member.id}
                     className="flex flex-col items-start text-sm max-sm:w-72 w-7/12"
                   >
-                    <Image
-                      src={await importImage()}
-                      alt={member.name}
-                      className="rounded-full"
-                    />
+                    <div className="relative w-32 h-32">
+                      <Image
+                        src={`/assets/${member.id}.webp`}
+                        alt={member.name}
+                        fill
+                        className="rounded-full"
+                      />
+                    </div>
                     <h4 className="font-bold mt-2">{member.name}</h4>
                     <p className="text-center">{member.description}</p>
                   </div>
