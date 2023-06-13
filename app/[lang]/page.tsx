@@ -3,11 +3,41 @@ import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import prismaClient from "@/prisma/prisma";
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
 
-  const projects = [] as { id: string; name: string }[];
+  async function getProjects() {
+    "use server";
+
+    const projects = await prismaClient.project.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        localeLanguage: params.lang,
+      },
+    });
+
+    return projects;
+  }
+
+  async function getMembers() {
+    "use server";
+
+    const members = await prismaClient.member.findMany({
+      where: {
+        localeLanguage: params.lang,
+      },
+    });
+
+    return members;
+  }
+
+  const members = await getMembers();
+  const projects = await getProjects();
 
   return (
     <>
@@ -52,18 +82,18 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                 >
                   <div className="relative flex-1">
                     <Image
-                      src={`/assets/${project.id}.jpg`}
+                      src={`/assets/${project.id}.webp`}
                       alt={project.name}
                       fill
                       className="object-cover -z-10"
                     />
                   </div>
-                  <h3
-                    className="font-bold text-xl bg-neutral-700 text-white p-2
+                  <h4
+                    className="font-bold text-start bg-neutral-700 text-white p-2
                   "
                   >
                     {project.name}
-                  </h3>
+                  </h4>
                 </div>
               ))}
           </div>
@@ -74,13 +104,31 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         <section>
           <h2 className="font-bold text-2xl mb-4">{dict.home.teamTitle}</h2>
           <div className="grid max-sm:grid-cols-1 max-md:grid-cols-2 grid-cols-3 gap-x-4 gap-y-10 justify-items-center">
-            {Array.from({ length: 11 }).map((_, index) => (
-              <div key={index}>
-                <Skeleton className="w-32 h-32 rounded-full" />
-                <Skeleton className="w-3/4 h-4 mt-2" />
-                <Skeleton className="w-1/2 h-4 mt-2" />
-              </div>
-            ))}
+            {Array.from({ length: 6 }).map((_, index) => {
+              return members.map(async (member) => {
+                const importImage = async () => {
+                  const { default: Image } = await import(
+                    `@/public/assets/${member.id}.webp`
+                  );
+
+                  return Image;
+                };
+                return (
+                  <div
+                    key={member.id}
+                    className="flex flex-col items-start text-sm max-sm:w-72 w-7/12"
+                  >
+                    <Image
+                      src={await importImage()}
+                      alt={member.name}
+                      className="rounded-full"
+                    />
+                    <h4 className="font-bold mt-2">{member.name}</h4>
+                    <p className="text-center">{member.description}</p>
+                  </div>
+                );
+              });
+            })}
           </div>
         </section>
 

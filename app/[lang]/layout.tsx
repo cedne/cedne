@@ -1,7 +1,6 @@
 import { getDictionary } from "@/get-dictionary";
 import { Locale, i18n } from "@/i18n-config";
 import type { Metadata } from "next";
-import "./globals.css";
 import Footer from "./footer";
 import LocaleSwitcher from "./locale-switcher";
 
