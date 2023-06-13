@@ -25,7 +25,7 @@ model Member {
   id             String @id @default(cuid())
   locale         Locale @relation(fields: [localeLanguage], references: [language])
   name           String
-  position       String
+  description    String @map("position")
   localeLanguage String
 }
 
