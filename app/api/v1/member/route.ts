@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         },
         data: {
           name: body.name,
-          position: body.position,
+          description: body.position,
         },
       })
     );
@@ -98,7 +98,7 @@ export async function PUT(request: NextRequest) {
     await prismaClient.member.create({
       data: {
         name: body.name,
-        position: body.position,
+        description: body.position,
         locale: { connect: { language: body.locale } },
       },
     })
