@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
 
   const assetDir = `${
-    process.env.NODE_ENV === "development" ? "./public/assets" : "./app/assets"
+    process.env.NODE_ENV === "development" ? "./public/assets" : "/app/assets"
   }`;
 
   let newRecord: {
