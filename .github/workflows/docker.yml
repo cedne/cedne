@@ -30,6 +30,6 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/${{ steps.package.outputs.name }}:${{ steps.package.outputs.version }}
             ${{ secrets.DOCKER_USERNAME }}/${{ steps.package.outputs.name }}:latest
-          secrets: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
           push: true
+          build-args: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
