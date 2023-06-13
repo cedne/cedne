@@ -13,6 +13,10 @@ interface Record {
   image: string;
 }
 
+const assetDir = `${
+  process.env.NODE_ENV === "development" ? "./public/assets" : "/app/assets"
+}`;
+
 export async function POST(request: NextRequest) {
   const data: Record = await request.json();
 
@@ -35,10 +39,6 @@ export async function POST(request: NextRequest) {
 
   if (!data.name || !data.description || !data.locale || !data.image)
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-
-  const assetDir = `${
-    process.env.NODE_ENV === "development" ? "./public/assets" : "./assets"
-  }`;
 
   let newRecord: {
     id: string;
@@ -94,10 +94,6 @@ export async function POST(request: NextRequest) {
 }
 
 async function cleanupUnusedImages() {
-  const assetDir = `${
-    process.env.NODE_ENV === "development" ? "./public/assets" : "./app/assets"
-  }`;
-
   const files = await fs.readdir(assetDir);
   const projectIds = await prismaClient.project.findMany({
     select: { id: true },
