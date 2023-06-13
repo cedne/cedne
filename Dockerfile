@@ -58,6 +58,6 @@ ENV PORT 3000
 
 VOLUME [ "/app/assets" ]
 
-RUN --mount=type=env,id=DATABASE_URL
+RUN --mount=type=secret,id=DATABASE_URL
 
 CMD ["node", "server.js"]
