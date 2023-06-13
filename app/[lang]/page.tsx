@@ -5,6 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import prismaClient from "@/prisma/prisma";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
 
