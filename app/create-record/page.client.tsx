@@ -12,6 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type {
+  Member as OriginalMember,
+  Project as OriginalProject,
+} from "@prisma/client";
+import { useRouter } from "next/navigation";
 
 interface Record {
   type?: "member" | "project" | "language";
@@ -22,7 +27,18 @@ interface Record {
   image?: File;
 }
 
-export default function CreateRecordClient({ locales }: { locales: string[] }) {
+type Member = Omit<OriginalMember, "image">;
+type Project = Omit<OriginalProject, "image">;
+
+export default function CreateRecordClient({
+  locales,
+  projects,
+  members,
+}: {
+  locales: string[];
+  projects: Project[];
+  members: Member[];
+}) {
   const [state, updateState] = useReducer(
     (state: Record, newState: Record) => ({ ...state, ...newState }),
     {
@@ -30,12 +46,37 @@ export default function CreateRecordClient({ locales }: { locales: string[] }) {
     }
   );
   const [error, setError] = useState("");
+  const [okMsg, setOkMsg] = useState("");
+  const radios: {
+    id: string;
+    label: string;
+  }[] = [
+    {
+      id: "member",
+      label: "Участник",
+    },
+    // {
+    //   id: "project",
+    //   label: "Проект",
+    // },
+    // {
+    //   id: "language",
+    //   label: "Язык",
+    // },
+  ];
+  const router = useRouter();
 
   useEffect(() => {
     if (!error) return;
 
     setTimeout(() => setError(""), 5000);
   }, [error]);
+
+  useEffect(() => {
+    if (!okMsg) return;
+
+    setTimeout(() => setOkMsg(""), 5000);
+  });
 
   return (
     <main className="mx-auto grid grid-flow-row gap-8 container">
@@ -58,9 +99,10 @@ export default function CreateRecordClient({ locales }: { locales: string[] }) {
             reader.onerror = reject;
             reader.readAsDataURL(imageFile);
           })
-            .then((result) => {
+            .then((result: any) => {
               formData.delete("image");
-              formData.append("image", result as string);
+              if (result === "data:") result = "";
+              formData.append("image", result);
             })
             .catch(() => {
               setError("Ошибка при загрузке изображения");
@@ -71,7 +113,10 @@ export default function CreateRecordClient({ locales }: { locales: string[] }) {
                 body: JSON.stringify(Object.fromEntries(formData)),
               })
                 .then((res) => {
-                  if (res.ok) form.reset();
+                  if (res.status === 200) {
+                    router.refresh();
+                    setOkMsg(res.statusText);
+                  } else throw new Error(res.statusText);
                 })
                 .catch((error) => setError(error.message));
             });
@@ -94,28 +139,26 @@ export default function CreateRecordClient({ locales }: { locales: string[] }) {
           id="type"
           name="type"
         >
-          <div className="flex flex-row space-x-2">
-            <RadioGroupItem value="member" id="member" />
-            <Label htmlFor="member">Участник</Label>
-          </div>
-          {/* <div className="flex flex-row space-x-2">
-            <RadioGroupItem value="project" id="project" />
-            <Label htmlFor="project">Проект</Label>
-          </div>
-          <div className="flex flex-row space-x-2">
-            <RadioGroupItem value="language" id="language" />
-            <Label htmlFor="language">Язык</Label>
-          </div> */}
+          {radios.map(({ id, label }) => (
+            <div key={id} className="flex flex-row space-x-2">
+              <RadioGroupItem value={id} id={id} />
+              <Label htmlFor={id}>{label}</Label>
+            </div>
+          ))}
         </RadioGroup>
 
         {(state.type === "member" || state.type === "project") && (
-          <MainForm locales={locales} />
+          <MainForm
+            locales={locales}
+            projectsOrMembers={state.type === "member" ? members : projects}
+          />
         )}
         {state.type === "language" && <LocaleForm />}
-        {error && <p className="text-red-500">{error}</p>}
         <Button type="submit" className="w-full">
           Создать
         </Button>
+        {error && <p className="text-red-500">{error}</p>}
+        {okMsg && <p className="text-green-500">{okMsg}</p>}
       </form>
     </main>
   );
@@ -155,10 +198,63 @@ function LabelInput({
   );
 }
 
-function MainForm({ locales }: { locales: string[] }) {
+function MainForm({
+  locales,
+  projectsOrMembers,
+}: {
+  locales: string[];
+  projectsOrMembers?: Project[] | Member[];
+}) {
+  const [selectedProjectOrMember, setSelectedProjectOrMember] = useState<
+    Project | Member | undefined
+  >();
+  const [selectedLocale, setSelectedLocale] = useState<string>(locales[0]);
+
+  useEffect(() => {
+    if (!selectedProjectOrMember) {
+      setSelectedLocale(locales[0]);
+      return;
+    }
+
+    setSelectedLocale(selectedProjectOrMember.locale);
+  }, [selectedProjectOrMember]);
+
+  projectsOrMembers = [
+    { id: "", name: "Новая запись", description: "", locale: locales[0] },
+    ...(projectsOrMembers || []),
+  ];
+
   return (
     <>
-      <Select defaultValue={locales[0]} name="locale">
+      <Select
+        value={selectedProjectOrMember?.id}
+        name="id"
+        onValueChange={(value) => {
+          const selected = projectsOrMembers?.find(
+            (projectOrMember) => projectOrMember.id === value
+          );
+          setSelectedProjectOrMember(selected);
+        }}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Выберите запись" />
+        </SelectTrigger>
+        <SelectContent>
+          {projectsOrMembers?.map((projectOrMember) => (
+            <SelectItem key={projectOrMember.id} value={projectOrMember.id}>
+              {projectOrMember.id === ""
+                ? projectOrMember.name
+                : `${projectOrMember.name} (${projectOrMember.locale})`}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={selectedLocale}
+        name="locale"
+        onValueChange={setSelectedLocale}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Выберите локаль" />
         </SelectTrigger>
@@ -170,8 +266,22 @@ function MainForm({ locales }: { locales: string[] }) {
           ))}
         </SelectContent>
       </Select>
-      <LabelInput id="name" placeholder="Имя" />
-      <LabelInput id="description" placeholder="Описание" />
+      <LabelInput
+        id="name"
+        placeholder="Имя"
+        defaultValue={
+          !selectedProjectOrMember?.id ? "" : selectedProjectOrMember?.name
+        }
+      />
+      <LabelInput
+        id="description"
+        placeholder="Описание"
+        defaultValue={
+          !selectedProjectOrMember?.id
+            ? ""
+            : selectedProjectOrMember?.description
+        }
+      />
       <LabelInput
         id="image"
         placeholder="Изображение"

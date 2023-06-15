@@ -2,7 +2,6 @@ import Image from "next/image";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import prismaClient from "@/prisma/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +16,10 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
       select: {
         id: true,
         name: true,
+        image: true,
       },
       where: {
-        localeLanguage: params.lang,
+        locale: params.lang,
       },
     });
 
@@ -31,7 +31,7 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
 
     const members = await prismaClient.member.findMany({
       where: {
-        localeLanguage: params.lang,
+        locale: params.lang,
       },
     });
 
@@ -68,36 +68,27 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
             className="flex flex-wrap gap-10 justify-items-center
           "
           >
-            {projects.length === 0 &&
-              Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="w-full h-60 flex-1 max-sm:flex-none basis-5/12
-              "
-                />
-              ))}
-            {projects.length !== 0 &&
-              projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="w-full h-60 flex-1 max-sm:flex-none basis-5/12 flex flex-col"
-                >
-                  <div className="relative flex-1">
-                    <Image
-                      src={`/assets/${project.id}.webp`}
-                      alt={project.name}
-                      fill
-                      className="object-cover -z-10"
-                    />
-                  </div>
-                  <h4
-                    className="font-bold text-start bg-neutral-700 text-white p-2
-                  "
-                  >
-                    {project.name}
-                  </h4>
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                className="w-full h-60 flex-1 max-sm:flex-none basis-5/12 flex flex-col"
+              >
+                <div className="relative flex-1">
+                  <Image
+                    src={project.image}
+                    alt={project.name}
+                    fill
+                    className="object-cover -z-10"
+                  />
                 </div>
-              ))}
+                <h4
+                  className="font-bold text-start bg-neutral-700 text-white p-2
+                  "
+                >
+                  {project.name}
+                </h4>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -106,27 +97,23 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
         <section>
           <h2 className="font-bold text-2xl mb-4">{dict.home.teamTitle}</h2>
           <div className="grid max-sm:grid-cols-1 max-md:grid-cols-2 grid-cols-3 gap-x-4 gap-y-10 justify-items-center">
-            {Array.from({ length: 6 }).map((_, index) => {
-              return members.map((member) => {
-                return (
-                  <div
-                    key={member.id}
-                    className="flex flex-col items-start text-sm max-sm:w-72 w-7/12"
-                  >
-                    <div className="relative w-32 h-32">
-                      <Image
-                        src={`/assets/${member.id}.webp`}
-                        alt={member.name}
-                        fill
-                        className="rounded-full"
-                      />
-                    </div>
-                    <h4 className="font-bold mt-2">{member.name}</h4>
-                    <p className="text-center">{member.description}</p>
-                  </div>
-                );
-              });
-            })}
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="flex flex-col items-start text-sm max-sm:w-72 w-7/12"
+              >
+                <div className="relative w-32 h-32">
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    fill
+                    className="rounded-full"
+                  />
+                </div>
+                <h4 className="font-bold mt-2">{member.name}</h4>
+                <p className="text-center">{member.description}</p>
+              </div>
+            ))}
           </div>
         </section>
 

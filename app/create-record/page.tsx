@@ -10,5 +10,41 @@ export default async function CreateRecord() {
     return locales.map((locale) => locale.language);
   }
 
-  return <CreateRecordClient locales={await getLocales()} />;
+  async function getProjects() {
+    "use server";
+
+    const projects = await prismaClient.project.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        locale: true,
+      },
+    });
+
+    return projects;
+  }
+
+  async function getMembers() {
+    "use server";
+
+    const members = await prismaClient.member.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        locale: true,
+      },
+    });
+
+    return members;
+  }
+
+  return (
+    <CreateRecordClient
+      locales={await getLocales()}
+      members={await getMembers()}
+      projects={await getProjects()}
+    />
+  );
 }

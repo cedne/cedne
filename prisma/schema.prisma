@@ -14,19 +14,21 @@ model Locale {
 }
 
 model Project {
-  id             String  @id @default(cuid())
-  locale         Locale  @relation(fields: [localeLanguage], references: [language])
-  name           String
-  description    String?
-  localeLanguage String
+  id          String @id @default(cuid())
+  Locale      Locale @relation(fields: [locale], references: [language])
+  name        String
+  description String
+  locale      String
+  image       String
 }
 
 model Member {
-  id             String @id @default(cuid())
-  locale         Locale @relation(fields: [localeLanguage], references: [language])
-  name           String
-  description    String @map("position")
-  localeLanguage String
+  id          String @id @default(cuid())
+  Locale      Locale @relation(fields: [locale], references: [language])
+  name        String
+  description String @map("position")
+  locale      String
+  image       String
 }
 
 model APIToken {
