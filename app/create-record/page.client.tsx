@@ -19,11 +19,11 @@ import type {
 import { useRouter } from "next/navigation";
 
 interface Record {
-  type?: "member" | "project" | "language";
-  name?: string;
-  description?: string;
-  locale?: string;
-  token?: string;
+  type: "member" | "project" | "language";
+  name: string;
+  description: string;
+  locale: string;
+  token: string;
   image?: File;
 }
 
@@ -39,32 +39,24 @@ export default function CreateRecordClient({
   projects: Project[];
   members: Member[];
 }) {
-  const [state, updateState] = useReducer(
-    (state: Record, newState: Record) => ({ ...state, ...newState }),
-    {
-      type: "member",
-    }
-  );
   const [error, setError] = useState("");
   const [okMsg, setOkMsg] = useState("");
+  const router = useRouter();
+  const [selectedProjectOrMember, setSelectedProjectOrMember] = useState<
+    Project | Member | undefined
+  >();
+  const [state, updateState] = useReducer(
+    (state: Record, newState: Partial<Record>) => ({ ...state, ...newState }),
+    { type: "member", name: "", description: "", locale: locales[0], token: "" }
+  );
   const radios: {
     id: string;
     label: string;
   }[] = [
-    {
-      id: "member",
-      label: "Участник",
-    },
-    // {
-    //   id: "project",
-    //   label: "Проект",
-    // },
-    // {
-    //   id: "language",
-    //   label: "Язык",
-    // },
+    { id: "member", label: "Участник" },
+    { id: "project", label: "Проект" },
+    // { id: "language", label: "Язык" },
   ];
-  const router = useRouter();
 
   useEffect(() => {
     if (!error) return;
@@ -113,10 +105,15 @@ export default function CreateRecordClient({
                 body: JSON.stringify(Object.fromEntries(formData)),
               })
                 .then((res) => {
-                  if (res.status === 200) {
-                    router.refresh();
-                    setOkMsg(res.statusText);
-                  } else throw new Error(res.statusText);
+                  res
+                    .json()
+                    .then((data) => {
+                      if (res.status === 200) {
+                        router.refresh();
+                        setOkMsg(data.message);
+                      } else throw new Error(data.message);
+                    })
+                    .catch((error) => setError(error.message));
                 })
                 .catch((error) => setError(error.message));
             });
@@ -132,7 +129,7 @@ export default function CreateRecordClient({
         <RadioGroup
           className="flex flex-row space-x-4"
           defaultChecked={true}
-          defaultValue={state.type}
+          value={state.type}
           onValueChange={(value) =>
             updateState({ type: value as Record["type"] })
           }
@@ -151,12 +148,49 @@ export default function CreateRecordClient({
           <MainForm
             locales={locales}
             projectsOrMembers={state.type === "member" ? members : projects}
+            selectedProjectOrMember={selectedProjectOrMember}
+            setSelectedProjectOrMember={setSelectedProjectOrMember}
           />
         )}
         {state.type === "language" && <LocaleForm />}
-        <Button type="submit" className="w-full">
-          Создать
-        </Button>
+        <div className="grid grid-flow-col gap-4">
+          <Button type="submit">
+            {selectedProjectOrMember ? "Сохранить" : "Создать"}
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              if (!selectedProjectOrMember) return;
+
+              fetch("/api/v1/records", {
+                method: "DELETE",
+                headers: {
+                  id: selectedProjectOrMember.id,
+                  type: state.type,
+                },
+              })
+                .then((res) => {
+                  res
+                    .json()
+                    .then((data) => {
+                      if (res.status === 200) {
+                        router.refresh();
+                        setOkMsg(data.message);
+                      } else throw new Error(data.message);
+                    })
+                    .catch((error) => setError(error.message));
+                })
+                .catch((error) => setError(error.message));
+            }}
+            className={`bg-red-500 hover:bg-red-600 ${
+              selectedProjectOrMember && selectedProjectOrMember.id !== ""
+                ? ""
+                : "hidden"
+            }`}
+          >
+            Удалить
+          </Button>
+        </div>
         {error && <p className="text-red-500">{error}</p>}
         {okMsg && <p className="text-green-500">{okMsg}</p>}
       </form>
@@ -167,32 +201,20 @@ export default function CreateRecordClient({
 function LabelInput({
   id,
   placeholder,
-  defaultValue = "",
   type = "text",
-  accept,
-  onChange,
-  value,
+  ...props
 }: {
   id: string;
-  placeholder: string;
-  defaultValue?: string;
-  type?: React.HTMLInputTypeAttribute;
-  accept?: string;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>;
-  value?: string;
-}) {
+} & React.ComponentPropsWithoutRef<typeof Input>) {
   return (
     <div className="flex flex-col space-y-2">
       <Label htmlFor={id}>{placeholder}</Label>
       <Input
+        {...props}
         id={id}
         name={id}
         type={type}
         placeholder={placeholder}
-        defaultValue={defaultValue}
-        accept={accept}
-        onChange={onChange}
-        value={value}
       />
     </div>
   );
@@ -201,13 +223,18 @@ function LabelInput({
 function MainForm({
   locales,
   projectsOrMembers,
+  selectedProjectOrMember,
+  setSelectedProjectOrMember,
 }: {
   locales: string[];
   projectsOrMembers?: Project[] | Member[];
+  selectedProjectOrMember: Project | Member | undefined;
+  setSelectedProjectOrMember: React.Dispatch<
+    React.SetStateAction<Project | Member | undefined>
+  >;
+  onCreate?: (projectOrMember: Project | Member | undefined) => void;
+  onDelete?: (projectOrMember: Project | Member | undefined) => void;
 }) {
-  const [selectedProjectOrMember, setSelectedProjectOrMember] = useState<
-    Project | Member | undefined
-  >();
   const [selectedLocale, setSelectedLocale] = useState<string>(locales[0]);
 
   useEffect(() => {
@@ -266,6 +293,7 @@ function MainForm({
           ))}
         </SelectContent>
       </Select>
+
       <LabelInput
         id="name"
         placeholder="Имя"
