@@ -40,11 +40,29 @@ export default async function CreateRecord() {
     return members;
   }
 
+  async function getData(): Promise<{
+    locales: Awaited<ReturnType<typeof getLocales>>;
+    members: Awaited<ReturnType<typeof getMembers>>;
+    projects: Awaited<ReturnType<typeof getProjects>>;
+  }> {
+    try {
+      const locales = await getLocales();
+      const members = await getMembers();
+      const projects = await getProjects();
+
+      return { locales, members, projects };
+    } catch {
+      return { locales: [], members: [], projects: [] };
+    }
+  }
+
+  const data = await getData();
+
   return (
     <CreateRecordClient
-      locales={await getLocales()}
-      members={await getMembers()}
-      projects={await getProjects()}
+      locales={data.locales}
+      members={data.members}
+      projects={data.projects}
     />
   );
 }
