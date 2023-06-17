@@ -6,6 +6,8 @@ import ProjectsSkeleton from "./projects.skeleton";
 import MembersSkeleton from "./members.skeleton";
 import type { Member, Project } from "@prisma/client";
 
+export const revalidate = 600;
+
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
 
