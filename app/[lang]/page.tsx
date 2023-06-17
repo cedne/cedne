@@ -2,54 +2,21 @@ import Image from "next/image";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { Separator } from "@/components/ui/separator";
-import prismaClient from "@/prisma/prisma";
 import ProjectsSkeleton from "./projects.skeleton";
 import MembersSkeleton from "./members.skeleton";
-
-export const dynamic = "force-dynamic";
+import type { Member, Project } from "@prisma/client";
 
 export default async function Home({ params }: { params: { lang: Locale } }) {
   const dict = await getDictionary(params.lang);
 
-  async function getProjects() {
-    "use server";
-
-    try {
-      const projects = await prismaClient.project.findMany({
-        select: {
-          id: true,
-          name: true,
-          image: true,
-        },
-        where: {
-          locale: params.lang,
-        },
-      });
-
-      return projects;
-    } catch {
-      return [];
-    }
-  }
-
-  async function getMembers() {
-    "use server";
-
-    try {
-      const members = await prismaClient.member.findMany({
-        where: {
-          locale: params.lang,
-        },
-      });
-
-      return members;
-    } catch {
-      return [];
-    }
-  }
-
-  const members = await getMembers();
-  const projects = await getProjects();
+  const projects: Project[] = await fetch(
+    "http://localhost:3000/api/v1/projects"
+  )
+    .then((res) => res.json())
+    .catch(() => []);
+  const members: Member[] = await fetch("http://localhost:3000/api/v1/members")
+    .then((res) => res.json())
+    .catch(() => []);
 
   return (
     <>
