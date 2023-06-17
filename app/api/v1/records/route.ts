@@ -33,8 +33,26 @@ export async function POST(request: NextRequest) {
   }
 
   if (!data.id) {
-    if (!data.name || !data.description || !data.locale || !data.image)
-      return NextResponse.json({ message: "Invalid body" }, { status: 400 });
+    if (!data.name)
+      return NextResponse.json(
+        { message: "Invalid body. Missing name" },
+        { status: 400 }
+      );
+    if (!data.description)
+      return NextResponse.json(
+        { message: "Invalid body. Missing description" },
+        { status: 400 }
+      );
+    if (!data.locale)
+      return NextResponse.json(
+        { message: "Invalid body. Missing locale" },
+        { status: 400 }
+      );
+    if (!data.image)
+      return NextResponse.json(
+        { message: "Invalid body. Missing image" },
+        { status: 400 }
+      );
   }
   if (data.image === "") data.image = undefined;
 
