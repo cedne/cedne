@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prismaClient from "@/prisma/prisma";
 
+export const dynamic = "force-dynamic";
+
 interface Record {
   id: string;
   token: string;
