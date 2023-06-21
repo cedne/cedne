@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import ProjectsSkeleton from "./projects.skeleton";
 import MembersSkeleton from "./members.skeleton";
 import type { Member, Project } from "@prisma/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const revalidate = 600;
 
@@ -15,9 +16,25 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
     "http://localhost:3000/api/v1/projects"
   )
     .then((res) => res.json())
+    .then((res) =>
+      Promise.all(
+        res.map((project: Partial<Project>) =>
+          fetch(`http://localhost:3000/api/v1/projects?id=${project.id}`)
+        )
+      )
+    )
+    .then((res) => Promise.all(res.map((project) => project.json())))
     .catch(() => []);
   const members: Member[] = await fetch("http://localhost:3000/api/v1/members")
     .then((res) => res.json())
+    .then((res) =>
+      Promise.all(
+        res.map((member: Partial<Member>) =>
+          fetch(`http://localhost:3000/api/v1/members?id=${member.id}`)
+        )
+      )
+    )
+    .then((res) => Promise.all(res.map((member) => member.json())))
     .catch(() => []);
 
   return (
@@ -55,12 +72,21 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                   className="w-full h-60 flex-1 max-sm:flex-none basis-5/12 flex flex-col"
                 >
                   <div className="relative flex-1">
-                    <Image
-                      src={project.image}
-                      alt={project.name}
-                      fill
-                      className="object-cover -z-10"
-                    />
+                    {(() => {
+                      if (!project.image)
+                        return (
+                          <Skeleton className="w-full h-60 flex-1 max-sm:flex-none basis-5/12" />
+                        );
+
+                      return (
+                        <Image
+                          src={project.image}
+                          alt={project.name}
+                          fill
+                          className="object-cover -z-10"
+                        />
+                      );
+                    })()}
                   </div>
                   <h4
                     className="font-bold text-start bg-neutral-700 text-white p-2
@@ -86,15 +112,22 @@ export default async function Home({ params }: { params: { lang: Locale } }) {
                   className="flex flex-col items-start text-sm max-sm:w-72 w-7/12"
                 >
                   <div className="relative w-32 h-32">
-                    <Image
-                      src={member.image}
-                      alt={member.name}
-                      fill
-                      className="rounded-full"
-                    />
+                    {(() => {
+                      if (!member.image)
+                        return <Skeleton className="w-32 h-32 rounded-full" />;
+
+                      return (
+                        <Image
+                          src={member.image}
+                          alt={member.name}
+                          fill
+                          className="rounded-full"
+                        />
+                      );
+                    })()}
                   </div>
                   <h4 className="font-bold mt-2">{member.name}</h4>
-                  <p className="text-center">{member.description}</p>
+                  <p>{member.description}</p>
                 </div>
               ))}
           </div>

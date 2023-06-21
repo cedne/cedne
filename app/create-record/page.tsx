@@ -68,20 +68,40 @@ export default function CreateRecordClient() {
       ),
     []
   );
-  const [projectsState, projectsAction] = useAsync(
-    (): Promise<Project[]> =>
-      fetch("/api/v1/projects").then((res) => res.json()),
-    []
-  );
-  const [membersState, membersAction] = useAsync(
-    (): Promise<Member[]> => fetch("/api/v1/members").then((res) => res.json()),
-    []
-  );
+  const [projectsState, projectsAction] = useAsync(async (): Promise<
+    Project[]
+  > => {
+    const projectsIds: Partial<Project>[] = await fetch(
+      "/api/v1/projects"
+    ).then((res) => res.json());
+    const projects: Project[] = await Promise.all(
+      projectsIds.map(async (project) => {
+        const res = await fetch(`/api/v1/projects?id=${project.id}`);
+        return res.json();
+      })
+    );
+    return projects;
+  }, []);
+  const [membersState, membersAction] = useAsync(async (): Promise<
+    Member[]
+  > => {
+    const membersIds: Partial<Member>[] = await fetch("/api/v1/members").then(
+      (res) => res.json()
+    );
+    const members: Member[] = await Promise.all(
+      membersIds.map(async (member) => {
+        const res = await fetch(`/api/v1/members?id=${member.id}&image=false`);
+        return res.json();
+      })
+    );
+
+    return members;
+  }, []);
 
   useEffect(() => {
     localesAction.execute();
     membersAction.execute();
-  }, []);
+  }, [localesAction, membersAction]);
 
   useEffect(() => {
     if (!error) return;
@@ -123,13 +143,18 @@ export default function CreateRecordClient() {
                   setOkMsg(data.message);
                 } else throw new Error(data.message);
               })
-              .catch((error) => setError(error.message));
+              .catch((error) => setError(error.message))
+              .finally(() => setLoading(false));
           })
-          .catch((error) => setError(error.message))
-          .finally(() => setLoading(false));
+          .catch((error) => {
+            setLoading(false);
+            return setError(error.message);
+          });
       })
-      .catch((e) => setError(`Ошибка при загрузке изображения ${e.message}`))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        setLoading(false);
+        return setError(`Ошибка при загрузке изображения ${e.message}`);
+      });
   }
 
   function reset() {
@@ -200,8 +225,8 @@ export default function CreateRecordClient() {
 
         <RadioGroup
           className="flex flex-row space-x-4"
-          defaultChecked={true}
-          defaultValue={state.type}
+          value={state.type}
+          onValueChange={(val) => updateState({ type: val as Record["type"] })}
           id="type"
           name="type"
         >
@@ -214,28 +239,29 @@ export default function CreateRecordClient() {
         </RadioGroup>
 
         {(state.type === "member" || state.type === "project") &&
-          // (
-          //   <MainForm
-          //     locales={localesState.result || []}
-          //     projectsOrMembers={
-          //       state.type === "member"
-          //         ? membersState.result
-          //         : projectsState.result
-          //     }
-          //     selectedProjectOrMember={selectedProjectOrMember}
-          //     setSelectedProjectOrMember={setSelectedProjectOrMember}
-          //   />
-          // )
-
-          // Is it possible to make ()=>{} function to be a component?
-          // I mean, to be able to use it like <MainForm ... />
-
           (() => {
             const record = (
               <Select
                 name="id"
                 value={state.id}
-                onValueChange={(value) => updateState({ id: value })}
+                onValueChange={(value) => {
+                  const record: Partial<Record> =
+                    value === ""
+                      ? state
+                      : state.type === "member"
+                      ? membersState.result.find((val) => val.id === value) ??
+                        state
+                      : projectsState.result.find((val) => val.id === value) ??
+                        state;
+
+                  return updateState({
+                    id: value,
+                    description: record.description,
+                    name: record.name,
+                    locale: record.locale,
+                    type: record.type,
+                  });
+                }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Новая запись" />
@@ -287,12 +313,16 @@ export default function CreateRecordClient() {
               <LabelInput
                 id="name"
                 placeholder={state.type === "member" ? "Имя" : "Название"}
+                value={state.name}
+                onChange={(e) => updateState({ name: e.target.value })}
               />
             );
             const description = (
               <LabelInput
                 id="description"
                 placeholder={state.type === "member" ? "Должность" : "Описание"}
+                value={state.description}
+                onChange={(e) => updateState({ description: e.target.value })}
               />
             );
             const image = (
