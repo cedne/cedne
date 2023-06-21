@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prismaClient from "@/prisma/prisma";
+import sharp from "sharp";
+import fs from "fs";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ interface Record {
 }
 
 export async function POST(request: NextRequest) {
-  const data: Record = await request.json();
+  let data: Record = await request.json();
 
   if (data.token !== process.env.API_TOKEN)
     return NextResponse.json({ message: "Invalid token" }, { status: 401 });
@@ -56,7 +58,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
   }
-  if (data.image === "") data.image = undefined;
+  Object.entries(data).forEach(([key, value]) => {
+    // @ts-ignore
+    if (!data[key]) data[key] = "";
+  });
 
   let newRecord: Omit<Record, "token" | "type"> | null = null;
 
@@ -115,6 +120,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
+  try {
+    if (!data.image) throw new Error("No image");
+    if (!newRecord) throw new Error("No record");
+    const base64Img = data.image.split(";base64,").pop();
+    const buffer = Buffer.from(base64Img || "", "base64");
+    sharp(buffer).webp().toFile(`${process.cwd()}/assets/${newRecord.id}.webp`);
+  } catch (err) {}
+
   return NextResponse.json({ message: "Record created", record: newRecord });
 }
 
@@ -132,6 +145,10 @@ export async function DELETE(request: NextRequest) {
     console.error(error);
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
+
+  try {
+    fs.unlinkSync(`${process.cwd()}/assets/${id}.webp`);
+  } catch (err) {}
 
   return NextResponse.json({ message: "Record deleted" });
 }
